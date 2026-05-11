@@ -1,14 +1,33 @@
-import mongoose from 'mongoose';
-import { Contact } from '../db/models/contactModel.js';
+import { ContactsCollection } from '../db/models/contactModel.js';
 
-export async function getAllContacts() {
-  return await Contact.find();
-}
+export const getAllContacts = async () => {
+  const contacts = await ContactsCollection.find();
+  return contacts;
+};
 
-export async function getContactById(contactId) {
-  if (!mongoose.Types.ObjectId.isValid(contactId)) {
-    return null;
-  }
+export const getContactById = async (contactId) => {
+  const contact = await ContactsCollection.findById(contactId);
+  return contact;
+};
 
-  return await Contact.findById(contactId);
-}
+export const createContact = async (payload) => {
+  const contact = await ContactsCollection.create(payload);
+  return contact;
+};
+
+export const updateContact = async (contactId, payload) => {
+  const contact = await ContactsCollection.findByIdAndUpdate(
+    contactId,
+    payload,
+    {
+      new: true,
+    },
+  );
+
+  return contact;
+};
+
+export const deleteContact = async (contactId) => {
+  const contact = await ContactsCollection.findByIdAndDelete(contactId);
+  return contact;
+};
