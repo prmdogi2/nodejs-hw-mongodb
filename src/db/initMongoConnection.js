@@ -1,16 +1,17 @@
 import mongoose from 'mongoose';
 
 export async function initMongoConnection() {
-  const { MONGODB_USER, MONGODB_PASSWORD, MONGODB_URL, MONGODB_DB } =
-    process.env;
+  const mongoUri = process.env.MONGODB_URI;
 
-  const mongoUri = `mongodb+srv://${MONGODB_USER}:${MONGODB_PASSWORD}@${MONGODB_URL}/${MONGODB_DB}?retryWrites=true&w=majority`;
+  if (!mongoUri) {
+    throw new Error('MONGODB_URI is not found in environment variables!');
+  }
 
   try {
     await mongoose.connect(mongoUri);
     console.log('Mongo connection successfully established!');
   } catch (error) {
     console.error('Mongo connection error:', error);
-    process.exit(1);
+    throw error;
   }
 }
