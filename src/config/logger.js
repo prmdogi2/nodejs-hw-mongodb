@@ -1,15 +1,21 @@
 import pino from 'pino';
 
+// Ortamın production olup olmadığını kontrol et
+const isProduction = process.env.NODE_ENV === 'production';
+
 const logger = pino({
   level: 'info',
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:dd-mm-yyyy HH:MM:ss',
-      ignore: 'pid,hostname',
-    },
-  },
+  // Eğer production ortamındaysak pino-pretty kullanma (standart JSON log bas)
+  transport: isProduction
+    ? undefined
+    : {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:dd-mm-yyyy HH:MM:ss',
+          ignore: 'pid,hostname',
+        },
+      },
   serializers: {
     req: (req) => ({
       id: req.id,
