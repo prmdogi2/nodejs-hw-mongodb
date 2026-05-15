@@ -1,6 +1,4 @@
-import mongoose from 'mongoose';
 import createHttpError from 'http-errors';
-
 import {
   getAllContacts,
   getContactById,
@@ -8,26 +6,34 @@ import {
   updateContact,
   deleteContact,
 } from '../services/contacts.js';
-
-import {
-  createContactSchema,
-  updateContactSchema,
-} from '../validation/contacts.js';
-
+import { parsePaginationParams } from '../utils/parsePaginationParams.js';
+import { parseSortParams } from '../utils/parseSortParams.js';
+import { parseFilterParams } from '../utils/parseFilterParams.js';
 
 // ========================
-// GET ALL
+// GET ALL (Sayfalandırma, Sıralama, Filtreleme eklendi)
 // ========================
 export const getAllContactsController = async (req, res) => {
-  const contacts = await getAllContacts();
+  // Query parametrelerini ayrıştır
+  const { page, perPage } = parsePaginationParams(req.query);
+  const { sortBy, sortOrder } = parseSortParams(req.query);
+  const filter = parseFilterParams(req.query);
+
+  const co
+  ntacts = await getAllContacts({
+    page,
+    perPage,
+    sortBy,
+    sortOrder,
+    filter,
+  });
 
   res.status(200).json({
     status: 200,
     message: 'Successfully found contacts!',
-    data: contacts,
+    data: contacts, // Artık meta verileri (page, totalItems vb.) içeren obje döner
   });
 };
-
 
 // ========================
 // GET BY ID
@@ -35,11 +41,7 @@ export const getAllContactsController = async (req, res) => {
 export const getContactByIdController = async (req, res) => {
   const { contactId } = req.params;
 
-  // 🔴 FIX: invalid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(contactId)) {
-    throw createHttpError(404, 'Contact not found');
-  }
-
+  // NOT: isValidId kontrolü artık Router seviyesinde middleware olarak yapılıyor.
   const contact = await getContactById(contactId);
 
   if (!contact) {
@@ -53,17 +55,11 @@ export const getContactByIdController = async (req, res) => {
   });
 };
 
-
 // ========================
 // CREATE
 // ========================
 export const createContactController = async (req, res) => {
-  const { error } = createContactSchema.validate(req.body);
-
-  if (error) {
-    throw createHttpError(400, error.message);
-  }
-
+  // NOT: validateBody kontrolü artık Router seviyesinde middleware olarak yapılıyor.
   const contact = await createContact(req.body);
 
   res.status(201).json({
@@ -73,24 +69,13 @@ export const createContactController = async (req, res) => {
   });
 };
 
-
 // ========================
 // PATCH
 // ========================
 export const patchContactController = async (req, res) => {
-  const { error } = updateContactSchema.validate(req.body);
-
-  if (error) {
-    throw createHttpError(400, error.message);
-  }
-
   const { contactId } = req.params;
 
-  // 🔴 FIX: invalid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(contactId)) {
-    throw createHttpError(404, 'Contact not found');
-  }
-
+  // NOT: validateBody ve isValidId kontrolü artık Router seviyesinde.
   const result = await updateContact(contactId, req.body);
 
   if (!result) {
@@ -104,17 +89,11 @@ export const patchContactController = async (req, res) => {
   });
 };
 
-
 // ========================
 // DELETE
 // ========================
 export const deleteContactController = async (req, res) => {
   const { contactId } = req.params;
-
-  // 🔴 FIX: invalid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(contactId)) {
-    throw createHttpError(404, 'Contact not found');
-  }
 
   const contact = await deleteContact(contactId);
 
