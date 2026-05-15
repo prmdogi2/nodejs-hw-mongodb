@@ -32,7 +32,7 @@ export const setupServer = () => {
   app.use('/contacts', contactsRouter);
 
   // 4. Hata Yönetimi (Sıralama kritiktir: Önce 404, en son Error Handler)
-  app.use('*', notFoundHandler); // Hiçbir rotaya eşleşmezse buraya düşer
+  app.use(notFoundHandler); // Hiçbir rotaya eşleşmezse buraya düşer
 
   app.use(errorHandler); // Next(err) ile gelen tüm hataları yakalar
 
