@@ -1,5 +1,6 @@
-import { ContactsCollection } from '../db/models/contact.js';
+import { ContactsCollection } from '../db/models/contactModel.js';
 
+// 1. Tüm kişileri getirme (Pagination, Sorting, Filtering ile)
 export const getAllContacts = async ({
   page = 1,
   perPage = 10,
@@ -10,31 +11,25 @@ export const getAllContacts = async ({
   const limit = perPage;
   const skip = (page - 1) * perPage;
 
-  // 1. Filtreleme objesini oluştur
-  const contactsQuery = ContactsCollection.find();
-
+  const queryFilter = {};
   if (filter.contactType) {
-    contactsQuery.where('contactType').equals(filter.contactType);
+    queryFilter.contactType = filter.contactType;
   }
-  
   if (typeof filter.isFavourite === 'boolean') {
-    contactsQuery.where('isFavourite').equals(filter.isFavourite);
+    queryFilter.isFavourite = filter.isFavourite;
   }
 
-  // 2. Toplam kayıt sayısını ve veriyi aynı anda çek
   const [totalItems, data] = await Promise.all([
-    ContactsCollection.find().merge(contactsQuery).countDocuments(),
-    contactsQuery
+    ContactsCollection.find(queryFilter).countDocuments(),
+    ContactsCollection.find(queryFilter)
       .sort({ [sortBy]: sortOrder })
       .skip(skip)
       .limit(limit)
       .exec(),
   ]);
 
-  // 3. Sayfa sayılarını hesapla
   const totalPages = Math.ceil(totalItems / perPage);
 
-  // Ödevde istenen özel formatı döndür
   return {
     data,
     page,
@@ -44,4 +39,41 @@ export const getAllContacts = async ({
     hasPreviousPage: page > 1,
     hasNextPage: page < totalPages,
   };
+};
+
+// 2. Tek bir kişiyi ID ile getirme
+export const getContactById = async (contactId) => {
+  return await ContactsCollection.findById(contactId);
+};
+
+// 3. Yeni kişi oluşturma
+export const createContact = async (payload) => {
+  return await ContactsCollection.create(payload);
+};
+
+// 4. Kişiyi güncelleme
+export const updateContact = async (contactId, payload, options = {}) => {
+  const rawResult = await ContactsCollection.findOneAndUpdate(
+    { _id: contactId },
+    payload,
+    {
+      new: true,
+      includeResultMetadata: true,
+      ...options,
+    },
+  );
+
+  if (!rawResult || !rawResult.value) return null;
+
+  return {
+    contact: rawResult.value,
+    isNew: Boolean(rawResult.lastErrorObject?.updatedExisting === false),
+  };
+};
+
+// 5. Kişiyi silme
+export const deleteContact = async (contactId) => {
+  return await ContactsCollection.findOneAndDelete({
+    _id: contactId,
+  });
 };
