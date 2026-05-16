@@ -1,7 +1,8 @@
 import { ContactsCollection } from '../db/models/contactModel.js';
 
-// 1. Tüm kişileri getirme (Pagination, Sorting, Filtering ile)
+// 1. Tüm kişileri getirme (Pagination, Sorting, Filtering ve USERID ile)
 export const getAllContacts = async ({
+  userId, // Kullanıcı id'sini parametre olarak alıyoruz
   page = 1,
   perPage = 10,
   sortBy = 'name',
@@ -11,7 +12,9 @@ export const getAllContacts = async ({
   const limit = perPage;
   const skip = (page - 1) * perPage;
 
-  const queryFilter = {};
+  // Sadece giriş yapan kullanıcının kişilerini getirmek için filtreye ekliyoruz
+  const queryFilter = { userId };
+  
   if (filter.contactType) {
     queryFilter.contactType = filter.contactType;
   }
@@ -41,20 +44,20 @@ export const getAllContacts = async ({
   };
 };
 
-// 2. Tek bir kişiyi ID ile getirme
-export const getContactById = async (contactId) => {
-  return await ContactsCollection.findById(contactId);
+// 2. Tek bir kişiyi ID ve USERID ile getirme (Başkası erişemesin)
+export const getContactById = async (contactId, userId) => {
+  return await ContactsCollection.findOne({ _id: contactId, userId });
 };
 
-// 3. Yeni kişi oluşturma
-export const createContact = async (payload) => {
-  return await ContactsCollection.create(payload);
+// 3. Yeni kişi oluşturma (Kişiye USERID atayarak)
+export const createContact = async (payload, userId) => {
+  return await ContactsCollection.create({ ...payload, userId });
 };
 
-// 4. Kişiyi güncelleme
-export const updateContact = async (contactId, payload, options = {}) => {
+// 4. Kişiyi güncelleme (Sadece sahibiyse güncellemeye izin verir)
+export const updateContact = async (contactId, userId, payload, options = {}) => {
   const rawResult = await ContactsCollection.findOneAndUpdate(
-    { _id: contactId },
+    { _id: contactId, userId }, // Hem kişi ID'sini hem de kullanıcı ID'sini arıyoruz
     payload,
     {
       new: true,
@@ -71,9 +74,10 @@ export const updateContact = async (contactId, payload, options = {}) => {
   };
 };
 
-// 5. Kişiyi silme
-export const deleteContact = async (contactId) => {
+// 5. Kişiyi silme (Sadece sahibiyse silmeye izin verir)
+export const deleteContact = async (contactId, userId) => {
   return await ContactsCollection.findOneAndDelete({
     _id: contactId,
+    userId, // Kullanıcı eşleşmesi zorunlu
   });
 };
