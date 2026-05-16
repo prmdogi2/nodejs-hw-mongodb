@@ -3,9 +3,11 @@ import { getEnvVar } from './utils/env.js';
 import pinoHttp from 'pino-http';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser'; // 1. Adım: Cookie parser import edildi
 import logger from './config/logger.js';
 import { corsOptions } from './config/cors.js';
-import contactsRouter from './routers/contact.js'; // İsimlendirme tutarlılığına dikkat (contact vs contacts)
+import contactsRouter from './routers/contact.js';
+import authRouter from './routers/auth.js'; // 2. Adım: Auth router import edildi
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 
@@ -16,9 +18,10 @@ export const setupServer = () => {
 
   // 1. Güvenlik ve Yardımcı Middleware'ler
   app.use(helmet());
-  app.use(cors(corsOptions)); // Fix: Obje içinden çıkarıldı
+  app.use(cors(corsOptions));
   app.use(pinoHttp({ logger }));
   app.use(express.json()); // Body-parser: POST ve PATCH istekleri için zorunlu
+  app.use(cookieParser()); // 3. Adım: Çerezleri okuyabilmek için middleware eklendi
 
   // 2. Ana Rota
   app.get('/', (req, res) => {
@@ -28,12 +31,12 @@ export const setupServer = () => {
     });
   });
 
-  // 3. Kaynak Rotaları (CRUD işlemleri burada toplanıyor)
+  // 3. Kaynak Rotaları (CRUD ve Kimlik Doğrulama işlemleri)
+  app.use('/auth', authRouter); // 4. Adım: Auth rotaları `/auth` prefix'i ile eklendi
   app.use('/contacts', contactsRouter);
 
   // 4. Hata Yönetimi (Sıralama kritiktir: Önce 404, en son Error Handler)
   app.use(notFoundHandler); // Hiçbir rotaya eşleşmezse buraya düşer
-
   app.use(errorHandler); // Next(err) ile gelen tüm hataları yakalar
 
   app.listen(PORT, () => {
