@@ -7,6 +7,8 @@ import {
   loginController,
   refreshController,
   logoutController,
+  sendResetEmailController,
+  resetPasswordController,
 } from '../controllers/auth.js';
 
 const router = Router();
@@ -22,9 +24,33 @@ const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
+const sendResetSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+const resetPasswordSchema = Joi.object({
+  token: Joi.string().required(),
+  password: Joi.string().required(),
+});
+
 router.post('/register', validateBody(registerSchema), ctrlWrapper(registerController));
 router.post('/login', validateBody(loginSchema), ctrlWrapper(loginController));
 router.post('/refresh', ctrlWrapper(refreshController));
 router.post('/logout', ctrlWrapper(logoutController));
+
+//
+// 🔥 HW6 ROUTES
+//
+router.post(
+  '/send-reset-email',
+  validateBody(sendResetSchema),
+  ctrlWrapper(sendResetEmailController)
+);
+
+router.post(
+  '/reset-pwd',
+  validateBody(resetPasswordSchema),
+  ctrlWrapper(resetPasswordController)
+);
 
 export default router;
