@@ -1,11 +1,14 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import createHttpError from 'http-errors';
+import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
+
 import { UsersCollection } from '../db/models/userModel.js';
 import { SessionsCollection } from '../db/models/sessionModel.js';
 
-const ACCESS_TOKEN_LIFETIME = 15 * 60 * 1000; // 15 dakika
-const REFRESH_TOKEN_LIFETIME = 30 * 24 * 60 * 60 * 1000; // 30 gün
+const ACCESS_TOKEN_LIFETIME = 15 * 60 * 1000;
+const REFRESH_TOKEN_LIFETIME = 30 * 24 * 60 * 60 * 1000;
 
 const createSessionData = () => {
   return {
@@ -61,4 +64,74 @@ export const refreshSession = async ({ refreshToken }) => {
 
 export const logoutUser = async ({ refreshToken }) => {
   await SessionsCollection.deleteOne({ refreshToken });
+};
+
+//
+// 🔥 HW6 EKLENDİ
+//
+
+export const sendResetEmail = async (email) => {
+  const user = await UsersCollection.findOne({ email });
+
+  if (!user) {
+    throw createHttpError(404, 'User not found!');
+  }
+
+  const token = jwt.sign(
+    { email },
+    process.env.JWT_SECRET,
+    { expiresIn: '5m' }
+  );
+
+  const resetLink =
+    `${process.env.APP_DOMAIN}/reset-password?token=${token}`;
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: email,
+      subject: 'Reset Password',
+      html: `<a href="${resetLink}">Reset Password</a>`,
+    });
+  } catch (err) {
+    throw createHttpError(
+      500,
+      'Failed to send the email, please try again later.'
+    );
+  }
+};
+
+export const resetPassword = async (token, password) => {
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    throw createHttpError(401, 'Token is expired or invalid.');
+  }
+
+  const user = await UsersCollection.findOne({ email: decoded.email });
+
+  if (!user) {
+    throw createHttpError(404, 'User not found!');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await UsersCollection.updateOne(
+    { email: decoded.email },
+    { password: hashedPassword }
+  );
+
+  await SessionsCollection.deleteMany({ userId: user._id });
 };

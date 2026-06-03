@@ -1,4 +1,11 @@
-import { registerUser, loginUser, refreshSession, logoutUser } from '../services/auth.js';
+import {
+  registerUser,
+  loginUser,
+  refreshSession,
+  logoutUser,
+  sendResetEmail,
+  resetPassword,
+} from '../services/auth.js';
 
 const setupSessionCookies = (res, session) => {
   res.cookie('refreshToken', session.refreshToken, {
@@ -9,7 +16,7 @@ const setupSessionCookies = (res, session) => {
 
 export const registerController = async (req, res) => {
   const user = await registerUser(req.body);
-  
+
   const userResponse = user.toObject();
   delete userResponse.password;
 
@@ -54,7 +61,33 @@ export const logoutController = async (req, res) => {
   if (req.cookies.refreshToken) {
     await logoutUser({ refreshToken: req.cookies.refreshToken });
   }
-  
+
   res.clearCookie('refreshToken');
   res.status(204).send();
+};
+
+//
+// 🔥 HW6 EKLENENLER
+//
+
+export const sendResetEmailController = async (req, res) => {
+  await sendResetEmail(req.body.email);
+
+  res.status(200).json({
+    status: 200,
+    message: 'Reset password email has been successfully sent.',
+    data: {},
+  });
+};
+
+export const resetPasswordController = async (req, res) => {
+  const { token, password } = req.body;
+
+  await resetPassword(token, password);
+
+  res.status(200).json({
+    status: 200,
+    message: 'Password has been successfully reset.',
+    data: {},
+  });
 };
