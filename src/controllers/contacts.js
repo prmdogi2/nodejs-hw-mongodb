@@ -1,19 +1,34 @@
-import { getAllContacts, getContactById, createContact, updateContact, deleteContact } from '../services/contacts.js';
+import {
+  getAllContacts,
+  getContactById,
+  createContact,
+  updateContact,
+  deleteContact,
+} from '../services/contacts.js';
+
 import createHttpError from 'http-errors';
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
 
+import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
+
+// GET ALL
 export const getContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
   const { sortBy, sortOrder } = parseSortParams(req.query);
   const filter = parseFilterParams(req.query);
-  
-  // Giriş yapan kullanıcının ID'sini alıyoruz
+
   const userId = req.user._id;
 
-  // userId bilgisini servise parametre olarak ekledik
-  const contacts = await getAllContacts({ userId, page, perPage, sortBy, sortOrder, filter });
+  const contacts = await getAllContacts({
+    userId,
+    page,
+    perPage,
+    sortBy,
+    sortOrder,
+    filter,
+  });
 
   res.status(200).json({
     status: 200,
@@ -22,43 +37,77 @@ export const getContactsController = async (req, res) => {
   });
 };
 
+// GET BY ID
 export const getContactByIdController = async (req, res) => {
   const { contactId } = req.params;
-  const userId = req.user._id; // Kullanıcı ID'si
+  const userId = req.user._id;
 
-  // Servise contactId ile birlikte userId'yi de gönderiyoruz
   const contact = await getContactById(contactId, userId);
+
   if (!contact) throw createHttpError(404, 'Contact not found');
-  
-  res.status(200).json({ status: 200, message: `Successfully found contact!`, data: contact });
+
+  res.status(200).json({
+    status: 200,
+    message: 'Successfully found contact!',
+    data: contact,
+  });
 };
 
+// CREATE (CLOUDINARY EKLİ)
 export const createContactController = async (req, res) => {
-  const userId = req.user._id; // Kullanıcı ID'si
+  const userId = req.user._id;
 
-  // Yeni kişi oluşturulurken sahibinin kim olduğunu servise bildiriyoruz
-  const contact = await createContact(req.body, userId);
-  res.status(201).json({ status: 201, message: 'Successfully created!', data: contact });
+  let photo = null;
+
+  if (req.file) {
+    photo = await saveFileToCloudinary(req.file);
+  }
+
+  const contact = await createContact(
+    {
+      ...req.body,
+      photo,
+    },
+    userId,
+  );
+
+  res.status(201).json({
+    status: 201,
+    message: 'Successfully created!',
+    data: contact,
+  });
 };
 
+// PATCH (CLOUDINARY EKLİ)
 export const patchContactController = async (req, res) => {
   const { contactId } = req.params;
-  const userId = req.user._id; // Kullanıcı ID'si
+  const userId = req.user._id;
 
-  // Sadece bu kullanıcıya aitse güncellenmesi için userId'yi geçiyoruz
-  const result = await updateContact(contactId, userId, req.body);
+  let payload = { ...req.body };
+
+  if (req.file) {
+    payload.photo = await saveFileToCloudinary(req.file);
+  }
+
+  const result = await updateContact(contactId, userId, payload);
+
   if (!result) throw createHttpError(404, 'Contact not found');
-  
-  res.status(200).json({ status: 200, message: 'Successfully patched!', data: result.contact });
+
+  res.status(200).json({
+    status: 200,
+    message: 'Successfully patched!',
+    data: result.contact,
+  });
 };
 
+// DELETE
 export const deleteContactController = async (req, res) => {
   const { contactId } = req.params;
-  const userId = req.user._id; // Kullanıcı ID'si
+  const userId = req.user._id;
 
-  // Sadece bu kullanıcıya aitse silinmesi için userId'yi geçiyoruz
   const contact = await deleteContact(contactId, userId);
+
   if (!contact) throw createHttpError(404, 'Contact not found');
-  
+
   res.status(204).send();
 };
