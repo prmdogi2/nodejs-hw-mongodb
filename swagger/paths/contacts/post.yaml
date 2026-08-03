@@ -1,0 +1,33 @@
+tags:
+  - Contacts
+summary: Yeni kişi oluştur
+operationId: createContact
+description: Giriş yapmış kullanıcı için, isteğe bağlı fotoğrafla birlikte yeni bir kişi oluşturur.
+security:
+  - bearerAuth: []
+requestBody:
+  required: true
+  content:
+    multipart/form-data:
+      schema:
+        $ref: '../../../swagger/components/schemas/contact.yaml#/ContactCreateRequest'
+responses:
+  '201':
+    description: Kişi başarıyla oluşturuldu
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: success
+            code:
+              type: integer
+              example: 201
+            data:
+              $ref: '../../../swagger/components/schemas/contact.yaml#/Contact'
+  '400':
+    $ref: '../../../swagger/components/responses/400.yaml'
+  '401':
+    $ref: '../../../swagger/components/responses/401.yaml'

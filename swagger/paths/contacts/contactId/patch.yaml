@@ -1,0 +1,40 @@
+tags:
+  - Contacts
+summary: Kişi bilgilerini güncelle
+operationId: updateContact
+description: Belirtilen id'ye sahip kişinin bilgilerini ve/veya fotoğrafını kısmi olarak günceller.
+security:
+  - bearerAuth: []
+parameters:
+  - in: path
+    name: contactId
+    required: true
+    schema:
+      type: string
+    description: Güncellenecek kişinin id'si
+requestBody:
+  required: true
+  content:
+    multipart/form-data:
+      schema:
+        $ref: '../../../../swagger/components/schemas/contact.yaml#/ContactUpdateRequest'
+responses:
+  '200':
+    description: Kişi başarıyla güncellendi
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: success
+            code:
+              type: integer
+              example: 200
+            data:
+              $ref: '../../../../swagger/components/schemas/contact.yaml#/Contact'
+  '400':
+    $ref: '../../../../swagger/components/responses/400.yaml'
+  '404':
+    $ref: '../../../../swagger/components/responses/404.yaml'

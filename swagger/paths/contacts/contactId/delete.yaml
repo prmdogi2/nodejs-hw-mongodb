@@ -1,0 +1,19 @@
+tags:
+  - Contacts
+summary: Kişiyi sil
+operationId: deleteContact
+description: Belirtilen id'ye sahip kişiyi veritabanından siler.
+security:
+  - bearerAuth: []
+parameters:
+  - in: path
+    name: contactId
+    required: true
+    schema:
+      type: string
+    description: Silinecek kişinin id'si
+responses:
+  '204':
+    description: Kişi başarıyla silindi (içerik döndürülmez)
+  '404':
+    $ref: '../../../../swagger/components/responses/404.yaml'
