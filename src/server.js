@@ -10,7 +10,7 @@ import contactsRouter from './routers/contact.js';
 import authRouter from './routers/auth.js'; // 2. Adım: Auth router import edildi
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
-
+import swaggerRouter from './routers/swagger.js';
 const PORT = Number(getEnvVar('PORT', '3000'));
 
 export const setupServer = () => {
@@ -34,7 +34,7 @@ export const setupServer = () => {
   // 3. Kaynak Rotaları (CRUD ve Kimlik Doğrulama işlemleri)
   app.use('/auth', authRouter); // 4. Adım: Auth rotaları `/auth` prefix'i ile eklendi
   app.use('/contacts', contactsRouter);
-
+  app.use('/api-docs', swaggerRouter);
   // 4. Hata Yönetimi (Sıralama kritiktir: Önce 404, en son Error Handler)
   app.use(notFoundHandler); // Hiçbir rotaya eşleşmezse buraya düşer
   app.use(errorHandler); // Next(err) ile gelen tüm hataları yakalar

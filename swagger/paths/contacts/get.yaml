@@ -1,0 +1,87 @@
+tags:
+  - Contacts
+summary: Kullanıcının tüm kişilerini getir
+operationId: getAllContacts
+description: >
+  Giriş yapmış kullanıcıya ait kişileri, sayfalama, sıralama ve filtreleme
+  seçenekleriyle listeler.
+security:
+  - bearerAuth: []
+parameters:
+  - in: query
+    name: page
+    schema:
+      type: integer
+      default: 1
+    description: Sayfa numarası
+  - in: query
+    name: perPage
+    schema:
+      type: integer
+      default: 10
+    description: Sayfa başına kayıt sayısı
+  - in: query
+    name: sortBy
+    schema:
+      type: string
+      default: name
+    description: Sıralama yapılacak alan (örn. name, createdAt)
+  - in: query
+    name: sortOrder
+    schema:
+      type: string
+      enum: [asc, desc]
+      default: asc
+    description: Sıralama yönü
+  - in: query
+    name: contactType
+    schema:
+      type: string
+      enum: [work, home, personal]
+    description: Kişi tipine göre filtreleme
+  - in: query
+    name: isFavourite
+    schema:
+      type: boolean
+    description: Sadece favori kişileri filtrelemek için
+responses:
+  '200':
+    description: Başarılı - kişi listesi döndü
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: success
+            code:
+              type: integer
+              example: 200
+            data:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '../../../swagger/components/schemas/contact.yaml#/Contact'
+                page:
+                  type: integer
+                  example: 1
+                perPage:
+                  type: integer
+                  example: 10
+                totalItems:
+                  type: integer
+                  example: 25
+                totalPages:
+                  type: integer
+                  example: 3
+                hasPreviousPage:
+                  type: boolean
+                  example: false
+                hasNextPage:
+                  type: boolean
+                  example: true
+  '401':
+    $ref: '../../../swagger/components/responses/401.yaml'

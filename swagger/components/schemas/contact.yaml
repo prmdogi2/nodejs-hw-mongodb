@@ -1,0 +1,111 @@
+Contact:
+  type: object
+  properties:
+    _id:
+      type: string
+      description: MongoDB tarafından otomatik atanan benzersiz kimlik
+      example: '65ca67e7ae7f10f6cb1a1111'
+    name:
+      type: string
+      minLength: 3
+      maxLength: 20
+      example: Ahmet Yılmaz
+    phoneNumber:
+      type: string
+      description: Sadece rakam ve +, -, (, ), boşluk karakterleri içerebilir
+      example: '+90 555 111 22 33'
+    email:
+      type: string
+      format: email
+      example: ahmet@example.com
+    isFavourite:
+      type: boolean
+      default: false
+      example: false
+    contactType:
+      type: string
+      enum: [work, home, personal]
+      default: personal
+      example: personal
+    photo:
+      type: string
+      nullable: true
+      description: Kişinin fotoğrafının Cloudinary üzerindeki URL'si
+      example: https://res.cloudinary.com/demo/image/upload/v1/contacts/photo.jpg
+    userId:
+      type: string
+      description: Bu kişiyi oluşturan kullanıcının id'si
+      example: '65ca6111ae7f10f6cb1a2222'
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+  required:
+    - name
+    - phoneNumber
+    - contactType
+
+# multipart/form-data body için (dosya yükleme dahil) - POST'ta kullanılır
+ContactCreateRequest:
+  type: object
+  required:
+    - name
+    - phoneNumber
+    - contactType
+  properties:
+    name:
+      type: string
+      minLength: 3
+      maxLength: 20
+      example: Ahmet Yılmaz
+    phoneNumber:
+      type: string
+      minLength: 3
+      maxLength: 20
+      example: '+90 555 111 22 33'
+    email:
+      type: string
+      format: email
+      minLength: 3
+      maxLength: 20
+      example: ahmet@example.com
+    isFavourite:
+      type: boolean
+      example: false
+    contactType:
+      type: string
+      enum: [work, home, personal]
+      example: personal
+    photo:
+      type: string
+      format: binary
+      description: Yüklenecek kişi fotoğrafı (opsiyonel)
+
+# PATCH için - hiçbir alan zorunlu değil
+ContactUpdateRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      minLength: 3
+      maxLength: 20
+    phoneNumber:
+      type: string
+      minLength: 3
+      maxLength: 20
+    email:
+      type: string
+      format: email
+      minLength: 3
+      maxLength: 20
+    isFavourite:
+      type: boolean
+    contactType:
+      type: string
+      enum: [work, home, personal]
+    photo:
+      type: string
+      format: binary
+      description: Yüklenecek yeni kişi fotoğrafı (opsiyonel)

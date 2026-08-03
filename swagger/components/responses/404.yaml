@@ -1,0 +1,15 @@
+description: Not Found - Belirtilen id ile kişi bulunamadı
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        code:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: Contact not found
